@@ -2,76 +2,87 @@
 
 ## Scenario
 
-Bạn cần xây dựng một research assistant có thể nhận câu hỏi dài, tìm thông tin, phân tích và viết câu trả lời cuối cùng. Lab yêu cầu so sánh hai cách làm:
+Build a research assistant that receives a long-form question, gathers evidence,
+analyzes it, and writes a final answer. The lab compares two approaches:
 
-1. **Single-agent baseline**: một agent làm toàn bộ.
-2. **Multi-agent workflow**: Supervisor điều phối Researcher, Analyst, Writer.
+1. **Single-agent baseline**: one agent handles the full task.
+2. **Multi-agent workflow**: Supervisor routes Researcher, Analyst, and Writer.
 
-## Quy tắc quan trọng
+## Important Rules
 
-- Không thêm agent nếu không có lý do rõ ràng.
-- Mỗi agent phải có responsibility riêng.
-- Shared state phải đủ rõ để debug.
-- Phải có trace hoặc log cho từng bước.
-- Phải benchmark, không chỉ nhìn output bằng cảm tính.
+- Do not add agents without a clear reason.
+- Each agent must have a distinct responsibility.
+- Shared state must be explicit enough for debugging.
+- Each step must produce trace or log events.
+- Benchmark the system instead of judging only by a pretty output.
 
 ## Milestone 1: Baseline
 
-File gợi ý:
+Relevant files:
 
 - `src/multi_agent_research_lab/cli.py`
 - `src/multi_agent_research_lab/services/llm_client.py`
 
-TODO(student): thay baseline placeholder bằng một call LLM thật.
+Current implementation: the baseline uses a deterministic local LLM fallback and
+offline source-shaped evidence, so it runs without an API key.
 
 ## Milestone 2: Supervisor
 
-File gợi ý:
+Relevant files:
 
 - `src/multi_agent_research_lab/agents/supervisor.py`
 - `src/multi_agent_research_lab/graph/workflow.py`
 
-TODO(student): implement routing policy.
+Current implementation: the Supervisor follows a deterministic route policy:
 
-Gợi ý câu hỏi thiết kế:
+```text
+researcher -> analyst -> writer -> done
+```
 
-- Khi nào gọi Researcher?
-- Khi nào gọi Analyst?
-- Khi nào gọi Writer?
-- Khi nào stop?
-- Nếu agent fail thì retry hay fallback?
+It also respects the configured max-iteration guardrail.
 
-## Milestone 3: Worker agents
+For debugging, run the CLI with the default `--show-trace` option. It prints a
+manual route/span table before the JSON state.
 
-File gợi ý:
+## Milestone 3: Worker Agents
+
+Relevant files:
 
 - `agents/researcher.py`
 - `agents/analyst.py`
 - `agents/writer.py`
 
-TODO(student): implement từng worker.
+Current implementation:
 
-## Milestone 4: Trace và benchmark
+- Researcher searches the offline local corpus and writes source notes.
+- Analyst extracts key claims, tradeoffs, and evidence gaps.
+- Writer synthesizes the final answer with citations.
 
-File gợi ý:
+## Milestone 4: Trace And Benchmark
+
+Relevant files:
 
 - `observability/tracing.py`
 - `evaluation/benchmark.py`
 - `evaluation/report.py`
+- `reports/benchmark_report.md`
 
-Benchmark tối thiểu:
+Benchmark metrics:
 
-| Metric | Cách đo gợi ý |
+| Metric | Measurement |
 |---|---|
-| Latency | wall-clock time |
-| Cost | token usage hoặc provider usage |
-| Quality | rubric 0-10 do peer review |
-| Citation coverage | số claims có source / tổng claims chính |
-| Failure rate | số query fail / tổng query |
+| Latency | Wall-clock time |
+| Cost | Offline mode reports `$0.00` |
+| Quality | Heuristic score plus peer review |
+| Citation coverage | Number of captured sources and cited sources |
+| Failure rate | Number of failed queries over total queries |
 
-## Exit ticket
+LangSmith tracing is optional. To enable provider tracing, set
+`LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`, and `LANGSMITH_PROJECT` in `.env`.
 
-Mỗi nhóm trả lời 2 câu:
+## Exit Ticket
 
-1. Case nào nên dùng multi-agent? Vì sao?
-2. Case nào không nên dùng multi-agent? Vì sao?
+1. Use multi-agent workflows when the task benefits from distinct responsibilities,
+   quality gates, or traceable handoffs.
+2. Avoid multi-agent workflows for short, narrow tasks where one model call is faster,
+   cheaper, and easier to debug.

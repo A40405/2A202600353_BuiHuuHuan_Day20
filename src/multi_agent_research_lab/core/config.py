@@ -20,8 +20,38 @@ class Settings(BaseSettings):
     openai_api_key: str | None = Field(default=None, validation_alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", validation_alias="OPENAI_MODEL")
 
+    local_llm_enabled: bool = Field(default=True, validation_alias="LOCAL_LLM_ENABLED")
+    local_model_path: str = Field(
+        default="WEIGHT/Qwen_Qwen3.5-0.8B-Q4_K_M.gguf",
+        validation_alias="LOCAL_MODEL_PATH",
+    )
+    local_model_n_ctx: int = Field(
+        default=2048,
+        ge=256,
+        le=32768,
+        validation_alias="LOCAL_MODEL_N_CTX",
+    )
+    local_model_n_gpu_layers: int = Field(default=-1, validation_alias="LOCAL_MODEL_N_GPU_LAYERS")
+    local_model_max_tokens: int = Field(
+        default=512,
+        ge=16,
+        le=2048,
+        validation_alias="LOCAL_MODEL_MAX_TOKENS",
+    )
+    local_model_temperature: float = Field(
+        default=0.2,
+        ge=0.0,
+        le=2.0,
+        validation_alias="LOCAL_MODEL_TEMPERATURE",
+    )
+
     langsmith_api_key: str | None = Field(default=None, validation_alias="LANGSMITH_API_KEY")
-    langsmith_project: str = Field(default="multi-agent-research-lab", validation_alias="LANGSMITH_PROJECT")
+    langsmith_tracing: bool = Field(default=False, validation_alias="LANGSMITH_TRACING")
+    langsmith_endpoint: str | None = Field(default=None, validation_alias="LANGSMITH_ENDPOINT")
+    langsmith_project: str = Field(
+        default="multi-agent-research-lab",
+        validation_alias="LANGSMITH_PROJECT",
+    )
 
     tavily_api_key: str | None = Field(default=None, validation_alias="TAVILY_API_KEY")
 
